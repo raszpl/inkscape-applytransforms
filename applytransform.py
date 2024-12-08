@@ -47,7 +47,7 @@ class ApplyTransform(inkex.EffectExtension):
                 try:
                     style_attrib = self.svg.unittouu(style.get(attrib)) / self.svg.unittouu("1px")
                     style_attrib *= math.sqrt(abs(transf.a * transf.d - transf.b * transf.c))
-                    style[attrib] = str(style_attrib)
+                    style[attrib] = str(round(style_attrib, 2)) + 'px'
                     update = True
                 except AttributeError as e:
                     pass
