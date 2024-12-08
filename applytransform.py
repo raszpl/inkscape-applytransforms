@@ -181,19 +181,13 @@ class ApplyTransform(inkex.EffectExtension):
             self.transformRectangle(node, transf)
             self.scaleStrokeWidth(node, transf)
 
-        elif node.tag in [inkex.addNS('text', 'svg')]:
+        elif node.tag in [inkex.addNS('text', 'svg'),
+                          inkex.addNS('tspan', 'svg')]:
             x = float(node.get('x', '0'))
             y = float(node.get('y', '0'))
             p = transf.apply_to_point((x, y))
-            node.set("x", p[0])
-            node.set("y", p[1])
-
-        elif node.tag in [inkex.addNS('tspan', 'svg')]:
-            parent = node.getparent()
-            x = float(parent.get('x', '0'))
-            y = float(parent.get('y', '0'))
-            node.set('x', float(node.get('x', '0')) + x)
-            node.set('y', float(node.get('y', '0')) + y)
+            node.set("x", str(p[0]))
+            node.set("y", str(p[1]))
 
         elif node.tag in [inkex.addNS('image', 'svg'),
                           inkex.addNS('image', 'svg'),
