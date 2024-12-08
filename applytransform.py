@@ -37,17 +37,17 @@ class ApplyTransform(inkex.EffectExtension):
 
         return node
 
-    def scaleStrokeWidth(self, node, transf):
+    def scaleStyleAttrib(self, node, transf, attrib):
         if 'style' in node.attrib:
             style = node.attrib.get('style')
             style = dict(Style.parse_str(style))
             update = False
 
-            if 'stroke-width' in style:
+            if attrib in style:
                 try:
-                    stroke_width = self.svg.unittouu(style.get('stroke-width')) / self.svg.unittouu("1px")
-                    stroke_width *= math.sqrt(abs(transf.a * transf.d - transf.b * transf.c))
-                    style['stroke-width'] = str(stroke_width)
+                    style_attrib = self.svg.unittouu(style.get(attrib)) / self.svg.unittouu("1px")
+                    style_attrib *= math.sqrt(abs(transf.a * transf.d - transf.b * transf.c))
+                    style[attrib] = str(style_attrib)
                     update = True
                 except AttributeError as e:
                     pass
@@ -115,7 +115,7 @@ class ApplyTransform(inkex.EffectExtension):
             p = Path(p).to_absolute().transform(transf, True)
             node.set('d', str(Path(CubicSuperPath(p).to_path())))
 
-            self.scaleStrokeWidth(node, transf)
+            self.scaleStyleAttrib(node, transf, 'stroke-width')
 
         elif node.tag in [inkex.addNS('polygon', 'svg'),
                           inkex.addNS('polyline', 'svg')]:
@@ -132,7 +132,7 @@ class ApplyTransform(inkex.EffectExtension):
             points = ' '.join(points)
             node.set('points', points)
 
-            self.scaleStrokeWidth(node, transf)
+            self.scaleStyleAttrib(node, transf, 'stroke-width')
 
         elif node.tag in [inkex.addNS("ellipse", "svg"), inkex.addNS("circle", "svg")]:
 
@@ -179,7 +179,7 @@ class ApplyTransform(inkex.EffectExtension):
 
         elif node.tag == inkex.addNS('rect', 'svg'):
             self.transformRectangle(node, transf)
-            self.scaleStrokeWidth(node, transf)
+            self.scaleStyleAttrib(node, transf, 'stroke-width')
 
         elif node.tag in [inkex.addNS('text', 'svg'),
                           inkex.addNS('tspan', 'svg')]:
@@ -188,16 +188,16 @@ class ApplyTransform(inkex.EffectExtension):
             p = transf.apply_to_point((x, y))
             node.set("x", str(p[0]))
             node.set("y", str(p[1]))
+            self.scaleStyleAttrib(node, transf, 'font-size')
 
         elif node.tag in [inkex.addNS('image', 'svg'),
-                          inkex.addNS('image', 'svg'),
                           inkex.addNS('use', 'svg')]:
             node.attrib['transform'] = str(transf)
             inkex.utils.errormsg(f"Shape {node.TAG} ({node.get('id')}) not yet supported. Not all transforms will be applied. Try Object to path first")
 
         else:
             # e.g. <g style="...">
-            self.scaleStrokeWidth(node, transf)
+            self.scaleStyleAttrib(node, transf, 'stroke-width')
 
         for child in node.getchildren():
             self.recursiveFuseTransform(child, transf)
