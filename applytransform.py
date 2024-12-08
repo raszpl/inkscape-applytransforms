@@ -187,7 +187,14 @@ class ApplyTransform(inkex.EffectExtension):
             p = transf.apply_to_point((x, y))
             node.set("x", p[0])
             node.set("y", p[1])
-            
+
+        elif node.tag in [inkex.addNS('tspan', 'svg')]:
+            parent = node.getparent()
+            x = float(parent.get('x', '0'))
+            y = float(parent.get('y', '0'))
+            node.set('x', float(node.get('x', '0')) + x)
+            node.set('y', float(node.get('y', '0')) + y)
+
         elif node.tag in [inkex.addNS('image', 'svg'),
                           inkex.addNS('image', 'svg'),
                           inkex.addNS('use', 'svg')]:
