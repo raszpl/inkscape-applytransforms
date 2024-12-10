@@ -55,6 +55,13 @@ class ApplyTransform(inkex.EffectExtension):
             if update:
                 node.attrib['style'] = Style(style).to_str()
 
+    def scaleMultiple(self, string, factor):
+        array = string.strip().split(' ')
+        for k, p in enumerate(array):
+            if p != '0':
+                array[k] = str(float(p) * factor)
+        return ' '.join(array)
+
     def transformRectangle(self, node, transf: Transform):
         x = float(node.get('x', '0'))
         y = float(node.get('y', '0'))
@@ -96,6 +103,59 @@ class ApplyTransform(inkex.EffectExtension):
             tr = Transform(f"rotate({angle:.6f},{new_cx:.6f},{new_cy:.6f})")
             node.set('transform',tr)
 
+    def transformText(self, node, transf: Transform):
+        x = float(node.get('x', '0'))
+        y = float(node.get('y', '0'))
+        new_x, new_y = transf.apply_to_point((x, y))
+
+        node.set("x", str(new_x))
+        node.set("y", str(new_y))
+
+        # Extract translation, scaling and rotation
+        a, b, c, d = transf.a, transf.b, transf.c, transf.d
+        sx = math.sqrt(a**2 + c**2)
+        sy = math.sqrt(b**2 + d**2)
+        angle = math.degrees(math.atan2(b, a))
+
+        if 'dx' in node.attrib:
+            node.set('dx', self.scaleMultiple(node.get('dx'), sx))
+
+        if 'dy' in node.attrib:
+            node.set('dy', self.scaleMultiple(node.get('dy'), sy))
+
+        # Add rotation if it exists
+        if abs(angle) > 1e-6:
+            tr = str(f"rotate({angle:.3f} {new_x:.3f} {new_y:.3f})")
+            node.set('transform',tr)
+
+    def transformTspan(self, node, transf: Transform):
+        x = float(node.get('x', '0'))
+        y = float(node.get('y', '0'))
+
+        # Extract translation, scaling, rotation and parent xy
+        a, b, c, d = transf.a, transf.b, transf.c, transf.d
+        sx = math.sqrt(a**2 + c**2)
+        sy = math.sqrt(b**2 + d**2)
+        angle = math.degrees(math.atan2(b, a))
+        parentx = node.getparent().get('x', '0')
+        parenty = node.getparent().get('y', '0')
+
+        if 'x' not in node.attrib or x == 0:
+            node.set('x', parentx)
+        else:
+            node.set('x', str(float(parentx) + x * sx))
+
+        if 'y' not in node.attrib or y == 0:
+            node.set('y', parenty)
+        else:
+            node.set('y', str(float(parenty) + y * sy))
+
+        if 'dx' in node.attrib:
+            node.set('dx', self.scaleMultiple(node.get('dx'), sx))
+
+        if 'dy' in node.attrib:
+            node.set('dy', self.scaleMultiple(node.get('dy'), sy))
+    
     def recursiveFuseTransform(self, node, transf=[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]):
 
         transf = Transform(transf) @ Transform(node.get("transform", None))
@@ -181,13 +241,12 @@ class ApplyTransform(inkex.EffectExtension):
             self.transformRectangle(node, transf)
             self.scaleStyleAttrib(node, transf, 'stroke-width')
 
-        elif node.tag in [inkex.addNS('text', 'svg'),
-                          inkex.addNS('tspan', 'svg')]:
-            x = float(node.get('x', '0'))
-            y = float(node.get('y', '0'))
-            p = transf.apply_to_point((x, y))
-            node.set("x", str(p[0]))
-            node.set("y", str(p[1]))
+        elif node.tag in [inkex.addNS('text', 'svg')]:
+            self.transformText(node, transf)
+            self.scaleStyleAttrib(node, transf, 'font-size')
+
+        elif node.tag in [inkex.addNS('tspan', 'svg')]:
+            self.transformTspan(node, transf)
             self.scaleStyleAttrib(node, transf, 'font-size')
 
         elif node.tag in [inkex.addNS('image', 'svg'),
