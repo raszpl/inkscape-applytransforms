@@ -135,7 +135,6 @@ class ApplyTransform(inkex.EffectExtension):
         a, b, c, d = transf.a, transf.b, transf.c, transf.d
         sx = math.sqrt(a**2 + c**2)
         sy = math.sqrt(b**2 + d**2)
-        angle = math.degrees(math.atan2(b, a))
         parentx = node.getparent().get('x', '0')
         parenty = node.getparent().get('y', '0')
 
