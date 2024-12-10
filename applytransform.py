@@ -125,8 +125,7 @@ class ApplyTransform(inkex.EffectExtension):
 
         # Add rotation if it exists
         if abs(angle) > 1e-6:
-            tr = str(f"rotate({angle:.3f} {new_x:.3f} {new_y:.3f})")
-            node.set('transform',tr)
+            node.attrib['transform'] = str(f"rotate({angle:.3f} {new_x:.3f} {new_y:.3f})")
 
     def transformTspan(self, node, transf: Transform):
         x = float(node.get('x', '0'))
