@@ -133,8 +133,8 @@ class ApplyTransform(inkex.EffectExtension):
 
         # Extract translation, scaling, rotation and parent xy
         a, b, c, d = transf.a, transf.b, transf.c, transf.d
-        sx = math.sqrt(a**2 + c**2)
-        sy = math.sqrt(b**2 + d**2)
+        sx = math.sqrt(a**2 + b**2)
+        sy = math.sqrt(c**2 + d**2)
         parentx = node.getparent().get('x', '0')
         parenty = node.getparent().get('y', '0')
 
